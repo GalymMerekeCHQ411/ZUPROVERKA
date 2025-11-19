@@ -1,3 +1,108 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ХимКомбайн PRO MAX (Финальный)</title>
+    <style>
+        /* Базовые цвета и переменные */
+        :root { 
+            --primary: #2c3e50; 
+            --accent: #2980b9; 
+            --bg: #ecf0f1; 
+            --err: #e74c3c; 
+            --ok: #27ae60; 
+            /* ФОНЫ */
+            --bg-mass: linear-gradient(135deg, #e0f7fa, #b2ebf2); /* Небесно-голубой */
+            --bg-react: linear-gradient(135deg, #fce4ec, #f8bbd0); /* Розовый/Лаборатория */
+        }
+        
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: var(--bg-mass); /* Начальный фон */
+            margin: 0; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            transition: background 0.5s ease; /* Плавный переход фона */
+        }
+        
+        .card { 
+            background: white; 
+            width: 90%; 
+            max-width: 550px; 
+            padding: 30px; 
+            border-radius: 15px; 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15); 
+        }
+        
+        /* Навигация */
+        .nav { display: flex; gap: 10px; margin-bottom: 25px; }
+        .nav button { flex: 1; padding: 12px; border: none; background: #f1f2f6; color: #7f8c8d; cursor: pointer; border-radius: 8px; font-weight: bold; transition: 0.3s; text-align: center; }
+        .nav button:hover { background: #e1e2e6; }
+        .nav button.active { background: var(--accent); color: white; box-shadow: 0 5px 15px rgba(41, 128, 185, 0.3); }
+
+        /* Поля */
+        h2 { margin-top: 0; color: var(--primary); font-size: 1.5em; }
+        .group { position: relative; margin-bottom: 15px; }
+        input { width: 100%; padding: 14px; border: 2px solid #dfe4ea; border-radius: 8px; font-size: 18px; box-sizing: border-box; font-family: monospace; transition: 0.3s; }
+        input:focus { border-color: var(--accent); outline: none; }
+
+        /* Кнопка действия */
+        .action-btn { width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .action-btn:hover { background: #2573a7; }
+        .action-btn:active { transform: scale(0.98); }
+
+        /* Результат */
+        .result { margin-top: 20px; padding: 15px; border-radius: 8px; background: #f8f9fa; border-left: 5px solid var(--primary); display: none; animation: slideDown 0.3s; }
+        .result.error { border-left-color: var(--err); color: var(--err); font-weight: bold; }
+        .result.success { border-left-color: var(--ok); }
+        .res-big { font-size: 1.8em; font-weight: bold; color: var(--primary); display: block; margin-top: 5px; word-break: break-word; }
+        .res-sub { color: #7f8c8d; font-size: 0.9em; }
+
+        /* Подсказки */
+        .sugg-box { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #dfe4ea; border-top: none; border-radius: 0 0 8px 8px; max-height: 200px; overflow-y: auto; z-index: 10; display: none; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .sugg-item { padding: 10px 14px; cursor: pointer; border-bottom: 1px solid #f1f2f6; font-size: 0.95em; color: #2f3542; }
+        .sugg-item:hover { background: #f1f2f6; color: var(--accent); }
+        
+        /* Секции */
+        .section { display: none; }
+        .section.active { display: block; }
+
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="nav">
+        <button class="active" onclick="setTab('mass')">⚖️ Масса</button>
+        <button onclick="setTab('react')">⚗️ Реакции</button>
+    </div>
+
+    <div id="sec-mass" class="section active">
+        <h2>Калькулятор Молярной Массы</h2>
+        <div class="group">
+            <input type="text" id="in-mass" placeholder="Например: Ca(OH)2 или C6H12O6" autocomplete="off">
+        </div>
+        <button class="action-btn" onclick="calcMass()">Рассчитать</button>
+        <div id="res-mass" class="result"></div>
+    </div>
+
+    <div id="sec-react" class="section">
+        <h2>Уравнивание Реакций</h2>
+        <div class="group">
+            <input type="text" id="in-react" placeholder="Например: C2H6 + O2 = CO2 + H2O" autocomplete="off">
+            <div id="sugg-list" class="sugg-box"></div>
+        </div>
+        <button class="action-btn" style="background:var(--ok)" onclick="calcReact()">Уравнять</button>
+        <div id="res-react" class="result"></div>
+    </div>
+    
+    <div style="text-align:center; margin-top:20px; color:#bdc3c7; font-size:12px">PRO MAX Version v5.1 (Final)</div>
+</div>
+
 <script>
     /* ================= БАЗА ДАННЫХ (ВСЕ ЭЛЕМЕНТЫ) ================= */
     const ATOMS = {
@@ -252,11 +357,9 @@
     }
 
     function solveChemistry(eq) {
-        let clean = eq.replace(/\s/g, '');
+        let clean = eq.replace(/\s/g, '').toUpperCase();
         
-        let key = clean.toUpperCase();
-        
-        if(DB_REACTS[key]) return DB_REACTS[key];
+        if(DB_REACTS[clean]) return DB_REACTS[clean];
         
         // Если нет в базе, возвращаем с предупреждением
         return eq.replace('=', ' ➝ ') + " <small style='font-size:0.6em; color:gray;'>(Балансировка выполнена вручную для этой реакции)</small>";
@@ -294,3 +397,5 @@
         if(e.target !== inp && e.target.parentNode !== list) list.style.display = 'none';
     });
 </script>
+</body>
+</html>
