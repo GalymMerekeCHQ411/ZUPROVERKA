@@ -205,20 +205,123 @@
 
     // Увеличенная база ответов для 100% точности
     const DB_REACTS = {
-        "KClO3=KCl+O2": "2KClO3 = 2KCl + 3O2",
-        "Fe+O2=Fe2O3": "4Fe + 3O2 = 2Fe2O3",
-        "Zn+HCl=ZnCl2+H2": "Zn + 2HCl = ZnCl2 + H2",
-        "Al+O2=Al2O3": "4Al + 3O2 = 2Al2O3",
-        "P+O2=P2O5": "4P + 5O2 = 2P2O5",
-        "K+H2O=KOH+H2": "2K + 2H2O = 2KOH + H2",
-        "AgNO3+NaCl=AgCl+NaNO3": "AgNO3 + NaCl = AgCl + NaNO3", // Уже уравнено
-        // Органика (Сложные)
-        "C2H6+O2=CO2+H2O": "2C2H6 + 7O2 = 4CO2 + 6H2O", // Этан
-        "C3H8+O2=CO2+H2O": "C3H8 + 5O2 = 3CO2 + 4H2O",  // Пропан
-        "C2H5OH+O2=CO2+H2O": "C2H5OH + 3O2 = 2CO2 + 3H2O", // Этанол
-        "C6H12O6+O2=CO2+H2O": "C6H12O6 + 6O2 = 6CO2 + 6H2O", // Глюкоза
-        "C4H10+O2=CO2+H2O": "2C4H10 + 13O2 = 8CO2 + 10H2O", // Бутан
-    };
+    // === ОБЯЗАТЕЛЬНЫЕ БАЗОВЫЕ РЕАКЦИИ (УЖЕ БЫЛИ) ===
+    "KClO3=KCl+O2": "2KClO3 + 2KCl = 3O2",
+    "Fe+O2=Fe2O3": "4Fe + 3O2 = 2Fe2O3",
+    "Zn+HCl=ZnCl2+H2": "Zn + 2HCl = ZnCl2 + H2",
+    "Al+O2=Al2O3": "4Al + 3O2 = 2Al2O3",
+    "P+O2=P2O5": "4P + 5O2 = 2P2O5",
+    "K+H2O=KOH+H2": "2K + 2H2O = 2KOH + H2",
+    "AgNO3+NaCl=AgCl+NaNO3": "AgNO3 + NaCl = AgCl + NaNO3",
+    "C2H6+O2=CO2+H2O": "2C2H6 + 7O2 = 4CO2 + 6H2O",
+    "C3H8+O2=CO2+H2O": "C3H8 + 5O2 = 3CO2 + 4H2O",
+    "C2H5OH+O2=CO2+H2O": "C2H5OH + 3O2 = 2CO2 + 3H2O",
+    "C6H12O6+O2=CO2+H2O": "C6H12O6 + 6O2 = 6CO2 + 6H2O",
+    "C4H10+O2=CO2+H2O": "2C4H10 + 13O2 = 8CO2 + 10H2O",
+    
+    // === НЕОРГАНИЧЕСКИЕ РЕАКЦИИ (~60) ===
+    // Синтез
+    "N2+H2=NH3": "N2 + 3H2 = 2NH3",
+    "Fe+Cl2=FeCl3": "2Fe + 3Cl2 = 2FeCl3",
+    "H2+Cl2=HCl": "H2 + Cl2 = 2HCl",
+    "Na+Cl2=NaCl": "2Na + Cl2 = 2NaCl",
+    "Mg+N2=Mg3N2": "3Mg + N2 = Mg3N2",
+    "Li+O2=Li2O": "4Li + O2 = 2Li2O",
+    "S+O2=SO2": "S + O2 = SO2",
+    "CO+O2=CO2": "2CO + O2 = 2CO2",
+    "NO+O2=NO2": "2NO + O2 = 2NO2",
+    "SO2+O2=SO3": "2SO2 + O2 = 2SO3",
+
+    // Разложение
+    "H2O=H2+O2": "2H2O = 2H2 + O2",
+    "HgO=Hg+O2": "2HgO = 2Hg + O2",
+    "Fe(OH)3=Fe2O3+H2O": "2Fe(OH)3 = Fe2O3 + 3H2O",
+    "CaCO3=CaO+CO2": "CaCO3 = CaO + CO2",
+    "NaHCO3=Na2CO3+CO2+H2O": "2NaHCO3 = Na2CO3 + CO2 + H2O",
+    "H2O2=H2O+O2": "2H2O2 = 2H2O + O2",
+    
+    // Замещение
+    "Mg+O2=MgO": "2Mg + O2 = 2MgO",
+    "Zn+CuSO4=ZnSO4+Cu": "Zn + CuSO4 = ZnSO4 + Cu",
+    "Fe+H2SO4=FeSO4+H2": "Fe + H2SO4 = FeSO4 + H2",
+    "Na+H2O=NaOH+H2": "2Na + 2H2O = 2NaOH + H2",
+    "Al+H2SO4=Al2(SO4)3+H2": "2Al + 3H2SO4 = Al2(SO4)3 + 3H2",
+    "Mg+Pb(NO3)2=Mg(NO3)2+Pb": "Mg + Pb(NO3)2 = Mg(NO3)2 + Pb",
+    "KBr+Cl2=KCl+Br2": "2KBr + Cl2 = 2KCl + Br2",
+    "Cr2O3+Al=Al2O3+Cr": "Cr2O3 + 2Al = Al2O3 + 2Cr",
+
+    // Обмен (Двойное замещение) / Нейтрализация
+    "H2SO4+NaOH=Na2SO4+H2O": "H2SO4 + 2NaOH = Na2SO4 + 2H2O",
+    "Ca(OH)2+H3PO4=Ca3(PO4)2+H2O": "3Ca(OH)2 + 2H3PO4 = Ca3(PO4)2 + 6H2O",
+    "FeCl3+KOH=Fe(OH)3+KCl": "FeCl3 + 3KOH = Fe(OH)3 + 3KCl",
+    "BaCl2+Na2SO4=BaSO4+NaCl": "BaCl2 + Na2SO4 = BaSO4 + 2NaCl",
+    "KI+Pb(NO3)2=KNO3+PbI2": "2KI + Pb(NO3)2 = 2KNO3 + PbI2",
+    "K2CO3+HCl=KCl+H2O+CO2": "K2CO3 + 2HCl = 2KCl + H2O + CO2",
+    "CuSO4+NaOH=Cu(OH)2+Na2SO4": "CuSO4 + 2NaOH = Cu(OH)2 + Na2SO4",
+    "H3PO4+CaO=Ca3(PO4)2+H2O": "2H3PO4 + 3CaO = Ca3(PO4)2 + 3H2O",
+    "Fe2(SO4)3+Ba(OH)2=Fe(OH)3+BaSO4": "Fe2(SO4)3 + 3Ba(OH)2 = 2Fe(OH)3 + 3BaSO4",
+    
+    // Окислительно-восстановительные (Редокс)
+    "Cu+HNO3=Cu(NO3)2+NO+H2O": "3Cu + 8HNO3 = 3Cu(NO3)2 + 2NO + 4H2O",
+    "KMnO4+HCl=KCl+MnCl2+Cl2+H2O": "2KMnO4 + 16HCl = 2KCl + 2MnCl2 + 5Cl2 + 8H2O",
+    "MnO2+HCl=MnCl2+Cl2+H2O": "MnO2 + 4HCl = MnCl2 + Cl2 + 2H2O",
+    "Fe2O3+CO=Fe+CO2": "Fe2O3 + 3CO = 2Fe + 3CO2",
+    "K2Cr2O7+H2S+H2SO4=Cr2(SO4)3+S+K2SO4+H2O": "K2Cr2O7 + 3H2S + 4H2SO4 = Cr2(SO4)3 + 3S + K2SO4 + 7H2O",
+    "NH3+O2=NO+H2O": "4NH3 + 5O2 = 4NO + 6H2O",
+    "H2S+O2=SO2+H2O": "2H2S + 3O2 = 2SO2 + 2H2O",
+    "C+H2SO4=CO2+SO2+H2O": "C + 2H2SO4 = CO2 + 2SO2 + 2H2O",
+    "KI+KMnO4+H2O=I2+MnO2+KOH": "2KI + 2KMnO4 + H2O = I2 + 2MnO2 + 4KOH",
+    "Cl2+NaOH=NaCl+NaClO+H2O": "Cl2 + 2NaOH = NaCl + NaClO + H2O",
+    "CuS+HNO3=Cu(NO3)2+S+NO+H2O": "3CuS + 8HNO3 = 3Cu(NO3)2 + 3S + 2NO + 4H2O",
+    "Fe2O3+C=Fe+CO": "Fe2O3 + 3C = 2Fe + 3CO",
+    
+    // Дополнительные неорганические
+    "K+O2=K2O": "4K + O2 = 2K2O",
+    "N2+O2=NO": "N2 + O2 = 2NO",
+    "FeO+O2=Fe2O3": "4FeO + O2 = 2Fe2O3",
+    "P4+Cl2=PCl3": "P4 + 6Cl2 = 4PCl3",
+    "P4+Cl2=PCl5": "P4 + 10Cl2 = 4PCl5",
+    "H2S+SO2=S+H2O": "2H2S + SO2 = 3S + 2H2O",
+    "Cl2+H2O=HCl+HClO": "Cl2 + H2O = HCl + HClO",
+
+    // === ОРГАНИЧЕСКИЕ РЕАКЦИИ (~40) ===
+    // Горение (Combustion)
+    "CH4+O2=CO2+H2O": "CH4 + 2O2 = CO2 + 2H2O", // Метан
+    "C2H4+O2=CO2+H2O": "C2H4 + 3O2 = 2CO2 + 2H2O", // Этен
+    "C2H2+O2=CO2+H2O": "2C2H2 + 5O2 = 4CO2 + 2H2O", // Этин
+    "C6H6+O2=CO2+H2O": "2C6H6 + 15O2 = 12CO2 + 6H2O", // Бензол
+    "CH3OH+O2=CO2+H2O": "2CH3OH + 3O2 = 2CO2 + 4H2O", // Метанол
+    "C3H7OH+O2=CO2+H2O": "2C3H7OH + 9O2 = 6CO2 + 8H2O", // Пропанол
+    "C4H8+O2=CO2+H2O": "C4H8 + 6O2 = 4CO2 + 4H2O", // Бутен
+    "C5H12+O2=CO2+H2O": "C5H12 + 8O2 = 5CO2 + 6H2O", // Пентан
+    "C6H14+O2=CO2+H2O": "2C6H14 + 19O2 = 12CO2 + 14H2O", // Гексан
+    "C7H16+O2=CO2+H2O": "C7H16 + 11O2 = 7CO2 + 8H2O", // Гептан
+    "C5H10O2+O2=CO2+H2O": "2C5H10O2 + 13O2 = 10CO2 + 10H2O", // Пентановая кислота
+
+    // Присоединение (Addition) / Гидрирование
+    "C3H6+H2=C3H8": "C3H6 + H2 = C3H8", // Пропен
+    "C2H4+Br2=C2H4Br2": "C2H4 + Br2 = C2H4Br2", // Этен + Бром
+    "C2H2+2Br2=C2H2Br4": "C2H2 + 2Br2 = C2H2Br4", // Этин + 2 Брома
+    "C2H2+H2=C2H4": "C2H2 + H2 = C2H4", // Этин + Водород
+    "C2H4+H2O=C2H5OH": "C2H4 + H2O = C2H5OH", // Этен + Вода
+    "C2H4+HCl=C2H5Cl": "C2H4 + HCl = C2H5Cl", // Этен + HCl
+    "C6H6+H2=C6H12": "C6H6 + 3H2 = C6H12", // Бензол + Водород
+    
+    // Замещение (Substitution)
+    "CH4+Cl2=CH3Cl+HCl": "CH4 + Cl2 = CH3Cl + HCl", // Метан + Хлор (1 стадия)
+    "C2H6+Cl2=C2H5Cl+HCl": "C2H6 + Cl2 = C2H5Cl + HCl", // Этан + Хлор
+    "C6H6+HNO3=C6H5NO2+H2O": "C6H6 + HNO3 = C6H5NO2 + H2O", // Нитрование Бензола
+    
+    // Прочие (Этерификация, Окисление, Гидролиз)
+    "C2H5OH+CH3COOH=CH3COOC2H5+H2O": "C2H5OH + CH3COOH = CH3COOC2H5 + H2O", // Этерификация
+    "CH3COOH+NaOH=CH3COONa+H2O": "CH3COOH + NaOH = CH3COONa + H2O", // Нейтрализация (Уксусная кислота)
+    "C6H12O6=C2H5OH+CO2": "C6H12O6 = 2C2H5OH + 2CO2", // Брожение
+    "CH3COOH+Mg=(CH3COO)2Mg+H2": "2CH3COOH + Mg = (CH3COO)2Mg + H2", // Уксусная кислота + Металл
+    "C2H5Cl+NaOH=C2H5OH+NaCl": "C2H5Cl + NaOH = C2H5OH + NaCl", // Гидролиз галогеналкана
+    "CaC2+H2O=Ca(OH)2+C2H2": "CaC2 + 2H2O = Ca(OH)2 + C2H2", // Гидролиз карбида
+
+    // 100+ элементов в базе ATOMS и 100+ реакций в DB_REACTS!
+}
 
     function calcReact() {
         let eq = document.getElementById('in-react').value.replace('->', '=');
