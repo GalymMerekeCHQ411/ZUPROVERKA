@@ -1,88 +1,108 @@
-// База данных атомных масс
-const atomicMasses = {
-    "H": 1.008, "He": 4.003, "Li": 6.94, "Be": 9.012, "B": 10.81,
-    "C": 12.011, "N": 14.007, "O": 15.999, "F": 18.998, "Ne": 20.180,
-    "Na": 22.990, "Mg": 24.305, "Al": 26.982, "Si": 28.085, "P": 30.974,
-    "S": 32.06, "Cl": 35.45, "K": 39.098, "Ca": 40.078, "Sc": 44.956,
-    "Ti": 47.867, "V": 50.942, "Cr": 51.996, "Mn": 54.938, "Fe": 55.845,
-    "Co": 58.933, "Ni": 58.693, "Cu": 63.546, "Zn": 65.38, "Ga": 69.723,
-    "Ge": 72.630, "As": 74.922, "Se": 78.971, "Br": 79.904, "Kr": 83.798,
-    "Rb": 85.468, "Sr": 87.62, "Y": 88.906, "Zr": 91.224, "Nb": 92.906,
-    "Mo": 95.95, "Ag": 107.87, "Cd": 112.41, "Sn": 118.71, "Sb": 121.76,
-    "I": 126.90, "Ba": 137.33, "Au": 196.97, "Hg": 200.59, "Pb": 207.2,
-    "U": 238.03
-};
-
-// Функция расчета
-function calculateMass() {
-    const input = document.getElementById('formula').value.trim();
-    const resultDiv = document.getElementById('result');
-    
-    // Сброс стилей ошибки
-    resultDiv.style.borderLeftColor = '#2c3e50'; 
-
-    if (!input) {
-        showResult('<span class="error">Введите формулу!</span>', true);
-        return;
-    }
-
-    // Регулярное выражение: ищем Элемент (напр. He, N) и цифру
-    const regex = /([A-Z][a-z]*)(\d*)/g;
-    
-    let totalMass = 0;
-    let match;
-    let parsedLength = 0;
-    let error = false;
-
-    while ((match = regex.exec(input)) !== null) {
-        const element = match[1];
-        const countStr = match[2];
-        const count = countStr === "" ? 1 : parseInt(countStr);
-        
-        // Считаем длину распознанной части, чтобы проверить на мусор
-        parsedLength += match[0].length;
-
-        if (atomicMasses[element]) {
-            totalMass += atomicMasses[element] * count;
-        } else {
-            showResult(`<span class="error">Элемент "${element}" не найден!</span>`, true);
-            error = true;
-            break;
-        }
-    }
-
-    // Если длина распознанного текста меньше длины ввода, значит были лишние символы
-    if (!error && parsedLength !== input.length) {
-        showResult('<span class="error">Ошибка в формуле (проверьте регистр: NaCl, не nacl)</span>', true);
-        error = true;
-    }
-
-    if (!error) {
-        // Успешный результат
-        resultDiv.style.display = 'block';
-        resultDiv.innerHTML = `
-            <div>Молярная масса <strong>${input}</strong>:</div>
-            <div class="mass-value">${totalMass.toFixed(3)} <small>г/моль</small></div>
-        `;
-    }
+:root {
+    --primary-color: #2c3e50;
+    --accent-color: #27ae60;
+    --bg-color: #ecf0f1;
+    --error-color: #e74c3c;
 }
 
-// Вспомогательная функция для отображения результата
-function showResult(html, isError) {
-    const resultDiv = document.getElementById('result');
-    resultDiv.style.display = 'block';
-    resultDiv.innerHTML = html;
-    if (isError) {
-        resultDiv.style.borderLeftColor = '#e74c3c';
-    }
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
 }
 
-// Привязка кнопки к функции
-document.getElementById('calcBtn').addEventListener('click', calculateMass);
+.container {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 15px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 450px;
+    text-align: center;
+}
 
-// Привязка клавиши Enter
-document.getElementById('formula').addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') {
-        calculateMass();
-    }
-});
+h1 {
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    margin-top: 0;
+}
+
+.input-group {
+    margin-bottom: 1.5rem;
+    text-align: left;
+}
+
+label {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: #7f8c8d;
+    font-weight: 600;
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 12px;
+    font-size: 18px;
+    border: 2px solid #bdc3c7;
+    border-radius: 8px;
+    box-sizing: border-box;
+    transition: border 0.3s;
+}
+
+input[type="text"]:focus {
+    border-color: var(--accent-color);
+    outline: none;
+}
+
+button {
+    background-color: var(--accent-color);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    font-size: 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s, transform 0.1s;
+    width: 100%;
+    font-weight: 600;
+}
+
+button:hover {
+    background-color: #219150;
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+#result {
+    margin-top: 25px;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    display: none; /* Скрыт по умолчанию */
+    border-left: 5px solid var(--primary-color);
+}
+
+.mass-value {
+    font-size: 2.2em;
+    font-weight: bold;
+    color: var(--primary-color);
+    display: block;
+    margin-top: 10px;
+}
+
+.error {
+    color: var(--error-color);
+    font-weight: bold;
+}
+
+.footer {
+    margin-top: 25px;
+    font-size: 0.85em;
+    color: #bdc3c7;
+}
