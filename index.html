@@ -3,28 +3,292 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PRO Химический Калькулятор</title>
-    <link rel="stylesheet" href="style.css">
+    <title>ХимКалькулятор & Уравниватель</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --accent: #3498db;
+            --success: #27ae60;
+            --bg: #ecf0f1;
+            --error: #e74c3c;
+            --panel-bg: #ffffff;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Навигация (Табы) */
+        .nav-container {
+            background: white;
+            width: 100%;
+            padding: 1rem 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            padding: 10px 25px;
+            border: 2px solid transparent;
+            background: none;
+            font-size: 16px;
+            font-weight: bold;
+            color: #7f8c8d;
+            cursor: pointer;
+            border-radius: 25px;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover { color: var(--accent); background: #f0f8ff; }
+        
+        .nav-btn.active {
+            background-color: var(--accent);
+            color: white;
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        /* Основной контейнер */
+        .main-card {
+            background: var(--panel-bg);
+            padding: 2.5rem;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+            position: relative;
+            min-height: 400px;
+        }
+
+        /* Скрытие неактивных секций */
+        .tool-section { display: none; animation: fadeIn 0.4s; }
+        .tool-section.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        h1, h2 { color: var(--primary); margin-top: 0; }
+        
+        .input-group { margin-bottom: 1.5rem; text-align: left; position: relative; }
+        label { display: block; margin-bottom: 0.5rem; color: #7f8c8d; font-weight: 600; }
+        
+        input[type="text"] {
+            width: 100%; padding: 14px; font-size: 18px;
+            border: 2px solid #bdc3c7; border-radius: 8px;
+            box-sizing: border-box; font-family: monospace;
+            transition: border 0.3s;
+        }
+        input[type="text"]:focus { border-color: var(--accent); outline: none; }
+
+        /* Кнопки действий */
+        .action-btn {
+            background-color: var(--accent); color: white;
+            border: none; padding: 14px 30px; font-size: 18px;
+            border-radius: 8px; cursor: pointer; width: 100%;
+            font-weight: 600; transition: 0.3s;
+        }
+        .action-btn:hover { background-color: #2980b9; }
+        .action-btn.secondary { background-color: var(--success); }
+        .action-btn.secondary:hover { background-color: #219150; }
+
+        /* Результаты */
+        .result-box {
+            margin-top: 25px; padding: 20px;
+            border-radius: 8px; background-color: #f8f9fa;
+            display: none; border-left: 5px solid var(--primary);
+            text-align: left;
+        }
+        .result-large { font-size: 1.8em; font-weight: bold; color: var(--primary); word-break: break-word; }
+        .result-sub { color: #7f8c8d; margin-top: 5px; font-size: 0.9em; }
+        
+        .error-msg { border-left-color: var(--error); color: var(--error); font-weight: bold; }
+
+        /* Автодополнение (Autocomplete) */
+        .suggestions-list {
+            position: absolute;
+            background: white;
+            width: 100%;
+            border: 1px solid #bdc3c7;
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 10px 10px rgba(0,0,0,0.1);
+            display: none;
+        }
+        .suggestion-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+            font-family: monospace;
+            color: #333;
+        }
+        .suggestion-item:hover { background-color: #f0f8ff; color: var(--accent); }
+        .highlight { color: var(--accent); font-weight: bold; }
+
+        .chem-arrow { color: var(--success); font-weight: bold; padding: 0 5px; }
+        
+        footer { margin-top: 30px; color: #bdc3c7; font-size: 0.8em; }
+    </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>🧪 ХимКалькулятор PRO</h1>
-        
-        <div class="input-group">
-            <label for="formula">Введите формулу (со скобками):</label>
-            <input type="text" id="formula" placeholder="Например: Ca(OH)2, K4[Fe(CN)6]" autocomplete="off">
-        </div>
-
-        <button id="calcBtn">Рассчитать массу</button>
-
-        <div id="result"></div>
-
-        <div class="footer">
-            Поддерживает (), [], {} и все 118 элементов
-        </div>
+    <div class="nav-container">
+        <button class="nav-btn active" onclick="switchTab('mass')">⚖️ Молярная Масса</button>
+        <button class="nav-btn" onclick="switchTab('reaction')">⚗️ Уравнивание Реакций</button>
     </div>
 
-    <script src="script.js"></script>
-</body>
-</html>
+    <div class="main-card">
+        
+        <div id="mass-section" class="tool-section active">
+            <h2>Калькулятор Молярной Массы</h2>
+            <div class="input-group">
+                <label>Введите формулу вещества:</label>
+                <input type="text" id="massInput" placeholder="Например: K4[Fe(CN)6]" autocomplete="off">
+            </div>
+            <button class="action-btn" onclick="calculateMass()">Рассчитать</button>
+            <div id="massResult" class="result-box"></div>
+        </div>
+
+        <div id="reaction-section" class="tool-section">
+            <h2>Уравнивание Реакций</h2>
+            <div class="input-group">
+                <label>Введите уравнение (реагенты = продукты):</label>
+                <input type="text" id="reactionInput" placeholder="Например: H2 + O2 = H2O" autocomplete="off">
+                <div id="suggestions" class="suggestions-list"></div>
+            </div>
+            <button class="action-btn secondary" onclick="balanceReaction()">Уравнять</button>
+            <div id="reactionResult" class="result-box"></div>
+        </div>
+
+        <footer>
+            ХимКомбайн v2.0 | All-in-One Chemistry Tool
+        </footer>
+    </div>
+
+    <script>
+        /* --- БАЗА ДАННЫХ ЭЛЕМЕНТОВ (ДЛЯ МАСС) --- */
+        const atomicMasses = {
+            "H": 1.008, "He": 4.003, "Li": 6.94, "Be": 9.012, "B": 10.81, "C": 12.011, "N": 14.007, "O": 15.999, "F": 18.998, "Ne": 20.180, "Na": 22.990, "Mg": 24.305, "Al": 26.982, "Si": 28.085, "P": 30.974, "S": 32.06, "Cl": 35.45, "K": 39.098, "Ca": 40.078, "Sc": 44.956, "Ti": 47.867, "V": 50.942, "Cr": 51.996, "Mn": 54.938, "Fe": 55.845, "Co": 58.933, "Ni": 58.693, "Cu": 63.546, "Zn": 65.38, "Ga": 69.723, "Ge": 72.630, "As": 74.922, "Se": 78.971, "Br": 79.904, "Kr": 83.798, "Rb": 85.468, "Sr": 87.62, "Y": 88.906, "Zr": 91.224, "Nb": 92.906, "Mo": 95.95, "Ag": 107.87, "Cd": 112.41, "Sn": 118.71, "Sb": 121.76, "I": 126.90, "Ba": 137.33, "Au": 196.97, "Hg": 200.59, "Pb": 207.2, "U": 238.03
+        };
+
+        /* --- БАЗА ДАННЫХ РЕАКЦИЙ (ДЛЯ АВТОПОДСТАНОВКИ) --- */
+        const commonReactions = [
+            "H2 + O2 = H2O",
+            "Na + Cl2 = NaCl",
+            "C + O2 = CO2",
+            "CH4 + O2 = CO2 + H2O",
+            "Fe + O2 = Fe2O3",
+            "Al + O2 = Al2O3",
+            "HCl + NaOH = NaCl + H2O",
+            "CaCO3 = CaO + CO2",
+            "N2 + H2 = NH3",
+            "KClO3 = KCl + O2",
+            "H2SO4 + NaOH = Na2SO4 + H2O",
+            "CuSO4 + Fe = FeSO4 + Cu",
+            "AgNO3 + NaCl = AgCl + NaNO3",
+            "Zn + HCl = ZnCl2 + H2",
+            "C6H12O6 + O2 = CO2 + H2O"
+        ];
+
+        /* --- ЛОГИКА ПЕРЕКЛЮЧЕНИЯ ВКЛАДОК --- */
+        function switchTab(tabName) {
+            // Убираем активность у всех кнопок и секций
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tool-section').forEach(s => s.classList.remove('active'));
+            
+            // Активируем нужные
+            if(tabName === 'mass') {
+                document.querySelector('button[onclick="switchTab(\'mass\')"]').classList.add('active');
+                document.getElementById('mass-section').classList.add('active');
+            } else {
+                document.querySelector('button[onclick="switchTab(\'reaction\')"]').classList.add('active');
+                document.getElementById('reaction-section').classList.add('active');
+            }
+        }
+
+        /* --- ЛОГИКА 1: КАЛЬКУЛЯТОР МАСС (С учетом скобок) --- */
+        function calculateMass() {
+            const input = document.getElementById('massInput').value.trim();
+            const resultBox = document.getElementById('massResult');
+            resultBox.style.display = 'none';
+            resultBox.className = 'result-box'; // Сброс класса ошибки
+
+            if(!input) return;
+
+            try {
+                const mass = parseFormulaWithBrackets(input);
+                resultBox.style.display = 'block';
+                resultBox.innerHTML = `
+                    <div class="result-sub">Молярная масса <b>${input}</b></div>
+                    <div class="result-large">${mass.toFixed(3)} <small>г/моль</small></div>
+                `;
+            } catch (e) {
+                resultBox.style.display = 'block';
+                resultBox.classList.add('error-msg');
+                resultBox.innerHTML = `Ошибка: ${e.message}`;
+            }
+        }
+
+        function parseFormulaWithBrackets(formula) {
+            const regex = /([A-Z][a-z]*)|(\d+)|([()\[\]{}])/g;
+            const tokens = [];
+            let match;
+            
+            // Проверка на недопустимые символы
+            if(/[^A-Za-z0-9()\[\]{}]/.test(formula)) throw new Error("Недопустимые символы");
+
+            while ((match = regex.exec(formula)) !== null) {
+                if (match[1]) tokens.push({ type: 'elem', val: match[1] });
+                else if (match[2]) tokens.push({ type: 'num', val: parseInt(match[2]) });
+                else if (match[3]) tokens.push({ type: 'brack', val: match[3] });
+            }
+
+            let stack = [[]]; // Стек групп
+            for (let token of tokens) {
+                let current = stack[stack.length - 1];
+                if (token.type === 'elem') {
+                    if(!atomicMasses[token.val]) throw new Error(`Элемент ${token.val} неизвестен`);
+                    current.push({ m: atomicMasses[token.val] });
+                } else if (token.type === 'brack') {
+                    if ('([{'.includes(token.val)) stack.push([]);
+                    else {
+                        if(stack.length === 1) throw new Error("Лишняя скобка");
+                        let group = stack.pop();
+                        let grMass = group.reduce((a,b)=>a+b.m, 0);
+                        stack[stack.length-1].push({ m: grMass });
+                    }
+                } else if (token.type === 'num') {
+                    if(current.length === 0) continue;
+                    current[current.length-1].m *= token.val;
+                }
+            }
+            return stack[0].reduce((a,b)=>a+b.m, 0);
+        }
+
+        /* --- ЛОГИКА 2: АВТОПОДСТАНОВКА И УРАВНИВАНИЕ --- */
+        
+        // Обработчик ввода для автоподсказок
+        const reactionInput = document.getElementById('reactionInput');
+        const suggestionsBox = document.getElementById('suggestions');
+
+        reactionInput.addEventListener('input', function() {
+            const val = this.value.toLowerCase();
+            suggestionsBox.innerHTML = '';
+            suggestionsBox.style.display = 'none';
+
+            if (!val) return;
+
+            const matches = commonReactions.filter(r => r.toLowerCase().startsWith
