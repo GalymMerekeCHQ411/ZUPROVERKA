@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ХимКомбайн PRO</title>
+    <title>ХимКомбайн PRO (Final Fix)</title>
     <style>
         :root { --primary: #2c3e50; --accent: #2980b9; --bg: #ecf0f1; --err: #e74c3c; --ok: #27ae60; }
         body { font-family: 'Segoe UI', sans-serif; background: var(--bg); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
@@ -12,9 +12,9 @@
         
         /* Навигация */
         .nav { display: flex; gap: 10px; margin-bottom: 25px; }
-        .nav btn { flex: 1; padding: 12px; border: none; background: #f1f2f6; color: #7f8c8d; cursor: pointer; border-radius: 8px; font-weight: bold; transition: 0.3s; text-align: center; }
-        .nav btn:hover { background: #e1e2e6; }
-        .nav btn.active { background: var(--accent); color: white; box-shadow: 0 5px 15px rgba(41, 128, 185, 0.3); }
+        .nav button { flex: 1; padding: 12px; border: none; background: #f1f2f6; color: #7f8c8d; cursor: pointer; border-radius: 8px; font-weight: bold; transition: 0.3s; text-align: center; }
+        .nav button:hover { background: #e1e2e6; }
+        .nav button.active { background: var(--accent); color: white; box-shadow: 0 5px 15px rgba(41, 128, 185, 0.3); }
 
         /* Поля */
         h2 { margin-top: 0; color: var(--primary); font-size: 1.5em; }
@@ -50,8 +50,8 @@
 
 <div class="card">
     <div class="nav">
-        <btn class="active" onclick="setTab('mass')">⚖️ Масса</btn>
-        <btn onclick="setTab('react')">⚗️ Реакции</btn>
+        <button class="active" onclick="setTab('mass')">⚖️ Масса</button>
+        <button onclick="setTab('react')">⚗️ Реакции</button>
     </div>
 
     <div id="sec-mass" class="section active">
@@ -73,7 +73,7 @@
         <div id="res-react" class="result"></div>
     </div>
     
-    <div style="text-align:center; margin-top:20px; color:#bdc3c7; font-size:12px">PRO Version v4.0</div>
+    <div style="text-align:center; margin-top:20px; color:#bdc3c7; font-size:12px">PRO Version v4.1 (Cleaned)</div>
 </div>
 
 <script>
@@ -90,15 +90,80 @@
     /* ================= ИНТЕРФЕЙС ================= */
     function setTab(tab) {
         document.querySelectorAll('.section').forEach(e => e.classList.remove('active'));
-        document.querySelectorAll('.nav btn').forEach(e => e.classList.remove('active'));
+        document.querySelectorAll('.nav button').forEach(e => e.classList.remove('active'));
         
         if(tab === 'mass') {
             document.getElementById('sec-mass').classList.add('active');
-            document.querySelectorAll('.nav btn')[0].classList.add('active');
+            document.querySelectorAll('.nav button')[0].classList.add('active');
         } else {
             document.getElementById('sec-react').classList.add('active');
-            document.querySelectorAll('.nav btn')[1].classList.add('active');
+            document.querySelectorAll('.nav button')[1].classList.add('active');
         }
     }
 
-    function showResult
+    function showResult(id, html, isError) {
+        const el = document.getElementById(id);
+        el.style.display = 'block';
+        // Убедимся, что классы всегда корректны
+        el.classList.remove('error', 'success');
+        el.classList.add(isError ? 'error' : 'success');
+        el.innerHTML = html;
+    }
+
+    /* ================= ЛОГИКА МАССЫ (С ТЕКОМ) ================= */
+    function calcMass() {
+        const input = document.getElementById('in-mass').value.trim();
+        if(!input) return showResult('res-mass', 'Введите формулу!', true);
+
+        try {
+            const mass = parseMassFormula(input);
+            showResult('res-mass', `<div class="res-sub">Молярная масса <b>${input}</b></div><span class="res-big">${mass.toFixed(3)} <small>г/моль</small></span>`, false);
+        } catch(e) {
+            // Здесь мы поймаем ошибки парсинга скобок, например
+            showResult('res-mass', `❌ Ошибка парсинга: ${e.message}`, true);
+        }
+    }
+
+    function parseMassFormula(formula) {
+        const regex = /([A-Z][a-z]*)|(\d+)|([()\[\]])/g;
+        // Защита: если formula пуста или не содержит химических символов
+        const tokens = formula.match(regex);
+        if(!tokens) throw new Error("Некорректная формула");
+
+        let stack = [[]];
+        
+        for(let t of tokens) {
+            let top = stack[stack.length - 1];
+            
+            if(!isNaN(t)) { // Число
+                if(top.length === 0) throw new Error("Число в начале элемента");
+                top[top.length-1].m *= parseInt(t);
+            } else if("([{".includes(t)) { // Открывающая
+                stack.push([]);
+            } else if(")]}".includes(t)) { // Закрывающая
+                if(stack.length === 1) throw new Error("Лишняя скобка");
+                let group = stack.pop();
+                let grMass = group.reduce((sum, i) => sum + i.m, 0);
+                stack[stack.length-1].push({m: grMass});
+            } else { // Элемент
+                if(!ATOMS[t]) throw new Error(`Элемент "${t}" не найден`);
+                top.push({m: ATOMS[t]});
+            }
+        }
+        if(stack.length > 1) throw new Error("Не закрыта скобка");
+        return stack[0].reduce((sum, i) => sum + i.m, 0);
+    }
+
+    /* ================= ЛОГИКА РЕАКЦИЙ (АЛГОРИТМ) ================= */
+    function calcReact() {
+        let eq = document.getElementById('in-react').value.replace('->', '=');
+        if(!eq.includes('=')) return showResult('res-react', "Нет знака '='", true);
+
+        try {
+            const parts = eq.split('=').map(s => s.trim());
+            const leftAtoms = getAtomsSet(parts[0]);
+            const rightAtoms = getAtomsSet(parts[1]);
+            
+            // 1. Проверка на исчезновение/появление атомов
+            const diff = [...leftAtoms].filter(x => !rightAtoms.has(x));
+            const diff2 = [...rightAtoms].filter(x => !left
