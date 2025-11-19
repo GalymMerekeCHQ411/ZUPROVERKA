@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Химический Калькулятор</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>🧪 ХимКалькулятор</h1>
+        
+        <div class="input-group">
+            <label for="formula">Введите химическую формулу:</label>
+            <input type="text" id="formula" placeholder="Например: H2O, C6H12O6, NaCl" autocomplete="off">
+        </div>
+
+        <button id="calcBtn">Рассчитать массу</button>
+
+        <div id="result"></div>
+
+        <div class="footer">
+            Рассчитывает молярную массу веществ
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
